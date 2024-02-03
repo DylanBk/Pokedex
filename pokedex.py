@@ -1,13 +1,13 @@
 # IMPORTS
 from tkinter import *
 import customtkinter
-import time
+import random
 
 customtkinter.set_appearance_mode("light")
 customtkinter.set_default_color_theme("blue")
 
 # STARTUP PAGE
-def intial_window():
+def intial_window(): #inital window containing options to login, signup, and forgotten password
 
     root = Tk()
     width= root.winfo_screenwidth()
@@ -23,33 +23,31 @@ def intial_window():
     )
     welcome_label.place(x=(width/2), y=100, anchor=CENTER)
 
-    login_options_frame = Frame(root)
-    login_options_frame.pack(side=TOP) 
-
     login_button = customtkinter.CTkButton(
         root,
         text ="Login",
         command=open_login_window
     )
-    login_button.pack(pady=150)
+    login_button.place(x=(width/2), y=215, anchor=CENTER)
 
     sign_up_button = customtkinter.CTkButton(
         root,
         text ="Sign Up",
         command=open_sign_up_window
     )
-    sign_up_button.place(x=(width/2), y=200, anchor=CENTER)
+    sign_up_button.place(x=(width/2), y=250, anchor=CENTER)
 
     forgot_password_button = customtkinter.CTkButton(
         root,
         text ="Forgotten your password?",
+        command=open_forgot_password_window
     )
-    forgot_password_button.place(x=(width/2), y=235, anchor=CENTER)
+    forgot_password_button.place(x=(width/2), y=300, anchor=CENTER)
 
     root.mainloop()
 
 # SIGN UP WINDOW
-def open_sign_up_window():
+def open_sign_up_window(): #subroutine for signing up for a pokedex account
 
      # SET UP ACCOUNT
     def signUp():
@@ -79,7 +77,7 @@ def open_sign_up_window():
                 sign_up_window,
                 text="Choose your display name",
                 font=('Roboto', 12),
-                bg = "#89E7FF"
+                bg="#89E7FF"
             )
             set_display_name_label.place(x=(width/2-width/10), y=150, anchor=W)
             set_display_name_entry = Entry(sign_up_window)
@@ -87,6 +85,20 @@ def open_sign_up_window():
 
             display_name = set_display_name_entry.get()
 
+            sequence_samples = ["3u4tvnyc3579cqnyc3mc", "64s8dh7428h72vsh72sr7ha", "66v4h2ht4svrhve8tsae"]
+            sequence_unmixed = random.choice(sequence_samples)
+            sequence_mixed = ''.join(random.choices(sequence_unmixed, k=15))
+            ACCOUNT_ID = sequence_mixed
+            print(ACCOUNT_ID)
+
+            account_id_label = Label(
+                sign_up_window,
+                text=(f"This is your account ID {ACCOUNT_ID}, treat it as you would your password."),
+                font=('Roboto', 12),
+                bg="#89E7FF",
+                fg="red"
+            )
+            account_id_label.place(x=(width/2-width/10), y=250, anchor=W)
 
     sign_up_window = Tk()
     width = sign_up_window.winfo_screenwidth()
@@ -130,21 +142,22 @@ def open_sign_up_window():
     sign_up_button = customtkinter.CTkButton(
         sign_up_window,
         text="Sign Up",
-        command= signUp
+        command=signUp
     )
     sign_up_button.place(x=(width/2-width/10), y=350, anchor=W)
 
     error_label = Label(
         sign_up_window,
         foreground = "red",
-        command=error_label.hide_label
+        # command=error_label.hide_label #find a way to only show when needed
     )
     error_label.place(x=(width/2-width/10), y=390, anchor=W)
 
-
     sign_up_window.mainloop()
 
-def open_login_window():
+
+# LOGIN WINDOW
+def open_login_window(): #subroutine for logging into pokedex account
 
     def login():
         pass
@@ -180,9 +193,48 @@ def open_login_window():
         text="Log in",
         command=login
     )
+    login_button.place(x=(width/2-width/10), y=300, anchor=W)
 
 
+# FORGOT PASSWORD
+def open_forgot_password_window(): #subroutine for password recovery
 
+    def forgot_password():
+        # if username and account id match then return password
+        pass
+
+    forgot_pw_window = Tk()
+    width = forgot_pw_window.winfo_screenwidth()
+    height = forgot_pw_window.winfo_screenheight()
+    forgot_pw_window.geometry("%dx%d" % (width, height))
+    forgot_pw_window["bg"] = "red"
+
+    forgot_pw_username_label = Label(
+        forgot_pw_window,
+        text="Enter Username",
+        font=('Roboto', 12),
+        bg="#89E7FF"
+    )
+    forgot_pw_username_label.place(x=(width/2-width/10), y=150, anchor=W)
+    forgot_pw_username_entry = Entry(forgot_pw_window)
+    forgot_pw_username_entry.place(x=(width/2-width/10), y=175, anchor=W)
+
+    forgot_pw_account_id_label = Label(
+        forgot_pw_window,
+        text="Enter Account ID",
+        font=('Roboto', 12),
+        bg="#89E7FF"
+    )
+    forgot_pw_account_id_label.place(x=(width/2-width/10), y=200, anchor=W)
+    forgot_pw_account_id_entry = Entry(forgot_pw_window)
+    forgot_pw_account_id_entry.place(x=(width/2-width/10), y=225, anchor=W)
+
+    forgot_pw_button = customtkinter.CTkButton(
+        forgot_pw_window,
+        text="Recover Password",
+        command=forgot_password
+    )
+    forgot_pw_button.place(x=(width/2-width/10), y=300, anchor=W)
 
 
 # MAIN LOOP
