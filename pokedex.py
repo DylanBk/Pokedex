@@ -23,6 +23,7 @@ def close_window(window): #destroys the window from which it is called from
     """
     window.destroy()
 
+
 # TO LAST WINDOW
 def to_prev_window(current, previous):#destroys current window and opens the previous window
     """
@@ -35,6 +36,7 @@ def to_prev_window(current, previous):#destroys current window and opens the pre
     current.destroy()
     previous()
 
+
 # ENCRYPT PW
 def encrypt(password, key): #encrypts passwords, creates a key used to compare entered pw and stored pw
     """
@@ -46,7 +48,7 @@ def encrypt(password, key): #encrypts passwords, creates a key used to compare e
 
     Returns:
         :enc_pw (str): The encrypted string.
-        :key(str): A key which can be used to compare enc_pw with user inputs.
+        :key (str): A key which can be used to compare enc_pw with user inputs.
     """
     if key is None:
         shift = random.randint(1,26)
@@ -80,16 +82,18 @@ def encrypt(password, key): #encrypts passwords, creates a key used to compare e
 
     return enc_pw, key
 
+
 # STARTUP PAGE
 def intial_window(): #inital window containing options to login, signup, and forgotten password
     init_window = Tk()
     init_window.geometry("500x500")
     init_window["bg"] = "red"
+    init_window.title=("Menu")
     # init_window["bg"] = PhotoImage(file = "main-bg.png")
 
     welcome_label = Label(
         init_window,
-        text="-  Welcome to the Pokedex  -",
+        text="-  Welcome to the Pokédex  -",
         font=('Roboto', 28, 'bold'),
         bg="red",
         fg="white"
@@ -110,14 +114,8 @@ def intial_window(): #inital window containing options to login, signup, and for
     )
     sign_up_button.place(x=250, y=300, anchor=CENTER)
 
-    # forgot_password_button = customtkinter.CTkButton(
-    #     init_window,
-    #     text ="Forgotten your password?",
-    #     command=lambda: [close_window(init_window), open_forgot_password_window()]
-    # )
-    # forgot_password_button.place(x=200, y=300, anchor=CENTER)
-
     init_window.mainloop()
+
 
 # SIGN UP WINDOW
 def open_sign_up_window(): #subroutine for signing up for a pokedex account
@@ -130,9 +128,26 @@ def open_sign_up_window(): #subroutine for signing up for a pokedex account
         password = sign_up_password_entry.get()
         password_confirm = sign_up_password_confirm_entry.get()
 
-        if username == "":
+        user_data = pd.read_csv('UserData.csv')
+        user_data_df = pd.DataFrame(user_data)
+
+        user_list = user_data_df.Username.to_list()
+
+        if len(user_list) >= 5:
+            error_label.config(
+                text="Maximum of six users has already been reached",
+                bg="white",
+                fg="red"
+            )
+        elif username == "":
             error_label.config(
                 text="Username cannot be blank",
+                bg="white",
+                fg="red"
+            )
+        elif username in user_list:
+            error_label.config(
+                text=f"An account with the username '{username}' already exists",
                 bg="white",
                 fg="red"
             )
@@ -160,7 +175,7 @@ def open_sign_up_window(): #subroutine for signing up for a pokedex account
 
             enc_pw, key = encrypt(password, None)
 
-            sequence_samples = ["3u4tvnyc3579cqnyc3mc", "64s8dh7428h72vsh72sr7ha", "66v4h2ht4svrhve8tsae"]
+            sequence_samples = ["9E3DtL51lOddK9qJCGZL", "1ZyaBqDskPGMwWaS5Ktf", "z8QVNnwQfsjrLJepbuta", "aAX4ka6vtZ3xHtMjnDKN", "3wqJdVFny4NLn7TTOHOo", "Whowy3ZGT1ne1Ol92MDV", "1mSQmTMYaShg32oH9vaF", "8RcamxL4ompFC3cvcOQX", "GfAVgHcq4x9uMwPbSJ7u", "jqXBfzGK8imwbIxSb2gx"]
             sequence_unmixed = random.choice(sequence_samples)
             sequence_mixed = ''.join(random.choices(sequence_unmixed, k=15))
             ACCOUNT_ID = sequence_mixed
@@ -169,12 +184,20 @@ def open_sign_up_window(): #subroutine for signing up for a pokedex account
                 "Username": [username],
                 "Password": [enc_pw],
                 "userID": [ACCOUNT_ID],
-                "key": [key]
+                "key": [key],
+                "DisplayName": [username],
+                "Pokemon1": 0,
+                "Pokemon2": 0,
+                "Pokemon3": 0,
+                "Pokemon4": 0,
+                "Pokemon5": 0,
+                "Pokemon6": 0
             }
-            df = pd.DataFrame(user_data)
-            df.to_csv("userData.csv", header=False, index=False, mode='a')
+            user_data_df = pd.DataFrame(user_data)
+            user_data_df.to_csv("UserData.csv", header=False, index=False, mode='a')
 
-            close_window(sign_up_window)
+            sign_up_window.destroy()
+            open_main_window()
 
     sign_up_window = Tk()
     sign_up_window.geometry("500x500")
@@ -239,32 +262,74 @@ def open_sign_up_window(): #subroutine for signing up for a pokedex account
 
     sign_up_window.mainloop()
 
+
 # LOGIN WINDOW
 def open_login_window(): #subroutine for logging into pokedex account
 
     def login():
         global username
 
+        error_label = Label(
+            login_window,
+            text="",
+            bg="white"
+        )
+        error_label.place(x=250, y=260, anchor=CENTER)
+
         username = login_username_entry.get()
         password = login_password_entry.get()
 
-        user_data = pd.read_csv('userData.csv')
+        user_data = pd.read_csv('UserData.csv')
         df = pd.DataFrame(user_data)
 
-        pasw = df.loc[df["Username"] == username]["Password"].item()
-        key = df.loc[df["Username"] == username]["key"].item()
-        password, key = encrypt(password, key)
+        user_list = df["Username"].to_list()
 
-        if password == pasw:
-            close_window(login_window)
-        elif password != pasw:
-            error_label = Label(
-                login_window,
-                text="Password incorrect, please try again",
-                bg="white",
-                fg="red"
-            )
-            error_label.place(x=250, y=260, anchor=W)
+        count = 0
+        for i in user_list:
+            count += 1
+            if count > len(user_list)-1: # -1 to account for list indexing starting at 0
+                error_label.config(
+                    text=f"An account with the username '{username}' does not exist",
+                    bg ="white",
+                    fg="red"
+                )
+
+            if username == i:
+                error_label.config(
+                    text="",
+                    bg="red"
+                )
+
+                pasw = df.loc[df["Username"] == username]["Password"].item()
+                key = df.loc[df["Username"] == username]["key"].item()
+                password, key = encrypt(password, key)
+
+                if password == pasw:
+                    login_window.destroy()
+                    open_main_window()
+                elif password != pasw:
+                    error_label.config(
+                        text="Password incorrect, please try again",
+                        bg="white",
+                        fg="red"
+                    )
+
+
+
+        if username == i:
+            pasw = df.loc[df["Username"] == username]["Password"].item()
+            key = df.loc[df["Username"] == username]["key"].item()
+            password, key = encrypt(password, key)
+
+            if password == pasw:
+                login_window.destroy()
+                open_main_window()
+            elif password != pasw:
+                error_label.config(
+                    text="Password incorrect, please try again",
+                    bg="white",
+                    fg="red"
+                )
 
 
     login_window = Tk()
@@ -309,300 +374,194 @@ def open_login_window(): #subroutine for logging into pokedex account
 
     login_window.mainloop()
 
-# FORGOT PASSWORD - ! NOT IN USE !
-# def open_forgot_password_window(): #subroutine for password recovery
-
-#     def forgot_password(): # if username and account id match then return password
-        # username = forgot_pw_username_entry.get()
-#         account_id = forgot_pw_account_id_entry.get()
-
-#         user_data = pd.read_csv('userData.csv')
-#         df = pd.DataFrame(user_data)
-
-#         acc_id = df.loc[df["Username"] == username]["userID"].item()
-#         print(acc_id)
-
-#         if account_id == acc_id:
-#             close_window(forgot_pw_window)
-#         elif username not in df:
-#             error_label.config(
-#                 text=f"Account with username '{username}' does not exist",
-#                 bg="white",
-#                 fg="red"
-#             )
-#         elif account_id != acc_id:
-#             error_label.config(
-#                 text="Incorrect account ID, please try again",
-#                 bg="white",
-#                 fg="red"
-#             )
-
-
-#     forgot_pw_window = Tk()
-#     width = forgot_pw_window.winfo_screenwidth()
-#     height = forgot_pw_window.winfo_screenheight()
-#     forgot_pw_window.geometry("%dx%d" % (width, height))
-#     forgot_pw_window["bg"] = "red"
-    
-    # back_to_menu = customtkinter.CTkButton(
-    # sign_up_window,
-    # text="Back to menu",
-    # command=lambda: to_prev_window(sign_up_window, intial_window)
-    # )
-    # back_to_menu.place(x=30,y=30)
-
-#     forgot_pw_username_label = Label(
-#         forgot_pw_window,
-#         text="Enter Username",
-#         font=('Roboto', 12),
-#         bg="red",
-#         fg="white"
-#     )
-#     forgot_pw_username_label.place(x=(width/2-width/10), y=150, anchor=W)
-#     forgot_pw_username_entry = Entry(forgot_pw_window)
-#     forgot_pw_username_entry.place(x=(width/2-width/10), y=175, anchor=W)
-
-#     forgot_pw_account_id_label = Label(
-#         forgot_pw_window,
-#         text="Enter Account ID",
-#         font=('Roboto', 12),
-#         bg="red",
-#         fg="white"
-#     )
-#     forgot_pw_account_id_label.place(x=(width/2-width/10), y=225, anchor=W)
-#     forgot_pw_account_id_entry = Entry(forgot_pw_window)
-#     forgot_pw_account_id_entry.place(x=(width/2-width/10), y=250, anchor=W)
-
-#     error_label = Label(
-#         forgot_pw_window,
-#         bg="red",
-#         fg="red"
-#     )
-#     error_label.place(x=(width/2-width/10), y=295, anchor=W)
-
-#     forgot_pw_button = customtkinter.CTkButton(
-#         forgot_pw_window,
-#         text="Recover Password",
-#         command=forgot_password
-#     )
-#     forgot_pw_button.place(x=(width/2-width/10), y=340, anchor=W)
-
-    # forgot_pw_window.mainloop()
-    pass
 
 # SEARCH POKEDEX FOR POKEMON
 def open_main_window(): # opens main window
 
-    user_data = pd.read_csv('userData.csv')
+    user_data = pd.read_csv('UserData.csv')
     user_data_df = pd.DataFrame(user_data)
-    party = pd.read_csv('party.csv')
-    party_df = pd.DataFrame(party)
-    ACCOUNT_ID = user_data_df.loc[user_data_df["Username"] == username]["userID"].item()
+
+    i = user_data_df.index[user_data_df.Username == username].tolist() # get index of user in use
+    i = i[0] # list to string
 
         # ADD TO PARTY
-    def party_add(pokemon_name): #subroutine to add pokemon to user's party !!!NEED TO MAKE IT SO NEW TEAM OVERWRITES OLD TEAM WITHOUT OVERWRITING WHOLE FILE!!!
+    def party_add(pokemon_name): #subroutine to add pokemon to user's party
         """
         ...Adds a chosen pokemon to the user's party.
 
         Args:
             :param pokemon_name(str): The Pokemon to be added to the user's party
-        """
-        party = pd.read_csv('party.csv')
-        party_df = pd.DataFrame(party)
+        """        
 
-        user_check = (party_df.loc[party_df.Username == username])
-
-        if len(user_check) < 1: # check if their username exists in the CSV file
-            new_user = {
-                "Username": [username],
-                "userID": [ACCOUNT_ID],
-                "Pokemon1": 0,
-                "Pokemon2": 0,
-                "Pokemon3": 0,
-                "Pokemon4": 0,
-                "Pokemon5": 0,
-                "Pokemon6": 0
-            }
-            new_user_df = pd.DataFrame(new_user) # if their username is not in the party, it adds them to it, the 0s are placeholders
-            new_user_df.to_csv('party.csv', header=False, index=False, mode='a')
-        
-        i = party_df.index[party_df.Username == username].tolist() # get index of user in use
-        i = i[0]
-
-        pk1 = party_df.loc[i, ["Pokemon1"]].to_string().replace("Pokemon1", "").strip()
-        pk2 = party_df.loc[i, ["Pokemon2"]].to_string().replace("Pokemon2", "").strip()
-        pk3 = party_df.loc[i, ["Pokemon3"]].to_string().replace("Pokemon3", "").strip()
-        pk4 = party_df.loc[i, ["Pokemon4"]].to_string().replace("Pokemon4", "").strip()
-        pk5 = party_df.loc[i, ["Pokemon5"]].to_string().replace("Pokemon5", "").strip()
-        pk6 = party_df.loc[i, ["Pokemon6"]].to_string().replace("Pokemon6", "").strip()
+        pk1 = user_data_df.loc[i, ["Pokemon1"]].to_string().replace("Pokemon1", "").strip() # convert value in df to a string without the column name
+        pk2 = user_data_df.loc[i, ["Pokemon2"]].to_string().replace("Pokemon2", "").strip()
+        pk3 = user_data_df.loc[i, ["Pokemon3"]].to_string().replace("Pokemon3", "").strip()
+        pk4 = user_data_df.loc[i, ["Pokemon4"]].to_string().replace("Pokemon4", "").strip()
+        pk5 = user_data_df.loc[i, ["Pokemon5"]].to_string().replace("Pokemon5", "").strip()
+        pk6 = user_data_df.loc[i, ["Pokemon6"]].to_string().replace("Pokemon6", "").strip()
 
         if pk1 == pokemon_name: # if any of these are '0', it's because that pokemon cell is empty and can be added to
             print(f"You already have {pokemon_name} on your team!") # if it's NOT '0', it's because there is a pokemon currently in that cell
-        elif pk1 == "0": # a, b, c, d, & e are used as temp vars to ensure previously added pokemon are not overwritten
-            new_team = {
-                "Username": [username],
-                "userID": [ACCOUNT_ID],
-                "Pokemon1": [pokemon_name],
-                "Pokemon2": 0,
-                "Pokemon3": 0,
-                "Pokemon4": 0,
-                "Pokemon5": 0,
-                "Pokemon6": 0
-            }
-            new_team_df = pd.DataFrame(new_team)
-            print(new_team_df)
-            
-            new_team_df.to_csv('party.csv', header=False, index=False, mode='a')
-
-            print(party_df)
-
+        elif pk1 == "0":
+            user_data_df.loc[i, "Pokemon1"] = pokemon_name
+            user_data_df.to_csv('UserData.csv', index=False)
         else:
             if pk2 == pokemon_name:
                 print(f"You already have {pokemon_name} on your team!")                    
             elif pk2 == "0":
-                a = party_df.loc[i, ["Pokemon1"]]
-                a = a.to_string()
-                a = a.replace("Pokemon1", "")
-                a = a.strip()
-
-                new_team = {
-                    "Username": [username],
-                    "userID": [ACCOUNT_ID],
-                    "Pokemon1": [a],
-                    "Pokemon2": [pokemon_name],
-                    "Pokemon3": 0,
-                    "Pokemon4": 0,
-                    "Pokemon5": 0,
-                    "Pokemon6": 0
-                }
-                new_team_df = pd.DataFrame(new_team)
-                new_team_df.to_csv('party.csv', header=False, index=False, mode='a')
+                user_data_df.loc[i, "Pokemon2"] = pokemon_name
+                user_data_df.to_csv('UserData.csv', index=False)
             else:
                 if pk3 == pokemon_name:
                     print(f"You already have {pokemon_name} on your team!")
                 elif pk3 == "0":
-                    a = party_df.loc[i, ["Pokemon1"]]
-                    a = a.to_string()
-                    a = a.replace("Pokemon1", "")
-                    a = a.strip()
-                    b = party_df.loc[i, ["Pokemon2"]]
-                    b = b.to_string()
-                    b = b.replace("Pokemon2", "")
-                    b = b.strip()
-
-                    new_team = {
-                    "Username": [username],
-                    "userID": [ACCOUNT_ID],
-                    "Pokemon1": [a],
-                    "Pokemon2": [b],
-                    "Pokemon3": [pokemon_name],
-                    "Pokemon4": 0,
-                    "Pokemon5": 0,
-                    "Pokemon6": 0
-                    }
-                    new_team_df = pd.DataFrame(new_team)
-                    new_team_df.to_csv('party.csv', header=False, index=False, mode='a')
+                    user_data_df.loc[i, "Pokemon3"] = pokemon_name
+                    user_data_df.to_csv('UserData.csv', index=False)
                 else:
                     if pk4 == pokemon_name:
                         print(f"You already have {pokemon_name} on your team!")
                     elif pk4 == "0":
-                        a = party_df.loc[i, ["Pokemon1"]]
-                        a = a.to_string()
-                        a = a.replace("Pokemon1", "")
-                        a = a.strip()
-                        b = party_df.loc[i, ["Pokemon2"]]
-                        b = b.to_string()
-                        b = b.replace("Pokemon2", "")
-                        b = b.strip()
-                        c = party_df.loc[i, ["Pokemon3"]]
-                        c = c.to_string()
-                        c = c.replace("Pokemon3", "")
-                        c = c.strip()
-
-                        new_team = {
-                        "Username": [username],
-                        "userID": [ACCOUNT_ID],
-                        "Pokemon1": [a],
-                        "Pokemon2": [b],
-                        "Pokemon3": [c],
-                        "Pokemon4": [pokemon_name],
-                        "Pokemon5": 0,
-                        "Pokemon6": 0
-                        }
-                        new_team_df = pd.DataFrame(new_team)
-                        new_team_df.to_csv('party.csv', header=False, index=False, mode='a')
+                        user_data_df.loc[i, "Pokemon4"] = pokemon_name
+                        user_data_df.to_csv('UserData.csv', index=False)
                     else:
                         if pk5 == pokemon_name:
                             print(f"You already have {pokemon_name} on your team!")
                         elif pk5 == "0":
-                            a = party_df.loc[i, ["Pokemon1"]]
-                            a = a.to_string()
-                            a = a.replace("Pokemon1", "")
-                            a = a.strip()
-                            b = party_df.loc[i, ["Pokemon2"]]
-                            b = b.to_string()
-                            b = b.replace("Pokemon2", "")
-                            b = b.strip()
-                            c = party_df.loc[i, ["Pokemon3"]]
-                            c = c.to_string()
-                            c = c.replace("Pokemon3", "")
-                            c = c.strip()
-                            d = party_df.loc[i, ["Pokemon4"]]
-                            d = d.to_string()
-                            d = d.replace("Pokemon4", "")
-                            d = d.strip()
-
-                            new_team = {
-                            "Username": [username],
-                            "userID": [ACCOUNT_ID],
-                            "Pokemon1": [a],
-                            "Pokemon2": [b],
-                            "Pokemon3": [c],
-                            "Pokemon4": [d],
-                            "Pokemon5": [pokemon_name],
-                            "Pokemon6": 0
-                            }
-                            new_team_df = pd.DataFrame(new_team)
-                            new_team_df.to_csv('party.csv', header=False, index=False, mode='a')
+                            user_data_df[i, "Pokemon5"] = pokemon_name
+                            user_data_df.to_csv('UserData.csv', index=False)
                         else:
                             if pk6 == pokemon_name:
                                 print("You already have 6 Pokemon on your team!")
                             elif pokemon_name == "0":
-                                a = party_df.loc[i, ["Pokemon1"]]
-                                a = a.to_string()
-                                a = a.replace("Pokemon1", "")
-                                a = a.strip()
-                                b = party_df.loc[i, ["Pokemon2"]]
-                                b = b.to_string()
-                                b = b.replace("Pokemon2", "")
-                                b = b.strip()
-                                c = party_df.loc[i, ["Pokemon3"]]
-                                c = c.to_string()
-                                c = c.replace("Pokemon3", "")
-                                c = c.strip()
-                                d = party_df.loc[i, ["Pokemon4"]]
-                                d = d.to_string()
-                                d = d.replace("Pokemon4", "")
-                                d = d.strip()
-                                e = party_df.loc[i, ["Pokemon5"]]
-                                e = e.to_string()
-                                e = e.replace("Pokemon5", "")
-                                e = e.strip()
-
-                                new_team = {
-                                "Username": [username],
-                                "userID": [ACCOUNT_ID],
-                                "Pokemon1": [a],
-                                "Pokemon2": [b],
-                                "Pokemon3": [c],
-                                "Pokemon4": [d],
-                                "Pokemon5": [e],
-                                "Pokemon6": [pokemon_name]
-                                }
-                                new_team_df = pd.DataFrame(new_team)
-                                new_team_df.to_csv('party.csv', header=False, index=False, mode='a')
+                                user_data_df[i, "Pokemon6"] = pokemon_name
+                                user_data_df.to_csv('UserData.csv', index=False)
                             else:
-                                print("error")
+                                print("You already have 6 Pokemon on your team!")
+
+
+    def party_replace(): # subroutine to replace a pokemon from user's party
+        pass
+
+
+    def view_party(): # subroutine to view all (if any) pokemon in user's party
+        """
+        ...Displays all Pokemon in the user's party.
+        """
+
+        def party_remove(): # subroutine to remove a pokemon from user's party
+            def remove_pokemon(pokemon):
+                """
+                ...Removes a chosen Pokemon from the user's party.
+
+                Args:
+                    :param pokemon (var): The Pokemon as a tkinter entry to be removed from the party. 
+                """
+
+                error_label = Label(
+                    main_window,
+                    text="",
+                    bg="red"
+                )
+                error_label.place(x=(width/2), y=700, anchor=CENTER)
+
+                pokemon_name = pokemon.get()
+                pokemon_name = pokemon_name.capitalize() # capitalize makes sure that first char is upper and the rest are lower to prevent errors caused by inputs such as 'piKAcHu'
+                options = ["Pokemon1", "Pokemon2", "Pokemon3", "Pokemon4", "Pokemon5", "Pokemon6"]
+
+                count = 0
+                for j in options:
+                    count += 1
+                    print(count)
+                    x = user_data_df.loc[i, j]
+                    if x == pokemon_name:
+                        user_data_df.loc[i, j] = 0
+                        user_data_df.to_csv('UserData.csv', index=False)
+                        party_remove_frame.destroy()
+                        view_party_frame.destroy()
+                    elif count == 6 and x != pokemon_name: # display error message once compared with all 6 and no matches
+                        error_label.config(
+                            text=f"{pokemon_name} is not in your party",
+                            bg="white",
+                            fg="red"
+                        )
+
+
+            party_remove_frame = Frame(
+                view_party_frame,
+                bg="white"
+            )
+            party_remove_frame.pack(padx=5, pady=5, side=RIGHT)
+            party_remove_entry = Entry(
+                party_remove_frame,
+                font=('Roboto', 12)
+            )
+            party_remove_entry.pack(side=LEFT)
+            party_remove_button = customtkinter.CTkButton(
+                party_remove_frame,
+                text="Confirm",
+                command=lambda: remove_pokemon(party_remove_entry)
+            )
+            party_remove_button.pack(side=RIGHT)
+
+
+        pk1 = user_data_df.loc[i, ["Pokemon1"]].to_string().replace("Pokemon1", "").strip() # convert value in df to a string without the column name
+        pk2 = user_data_df.loc[i, ["Pokemon2"]].to_string().replace("Pokemon2", "").strip()
+        pk3 = user_data_df.loc[i, ["Pokemon3"]].to_string().replace("Pokemon3", "").strip()
+        pk4 = user_data_df.loc[i, ["Pokemon4"]].to_string().replace("Pokemon4", "").strip()
+        pk5 = user_data_df.loc[i, ["Pokemon5"]].to_string().replace("Pokemon5", "").strip()
+        pk6 = user_data_df.loc[i, ["Pokemon6"]].to_string().replace("Pokemon6", "").strip()
+
+        view_party_frame = Frame(
+            main_window,
+            bg="azure3"
+        )
+        view_party_frame.place(x=(width/2), y=550, anchor=CENTER)
+
+        if pk1 == 0 and pk2 == 0 and pk3 == 0 and pk4 == 0 and pk5 == 0 and pk6 == 0:
+            error_label = Label(
+                view_party_frame,
+                text="You currently have no Pokémon in your party",
+                font=('Roboto', 12),
+                fg="red"
+            )
+            error_label.pack()
+        else:
+            if pk1 == 0:
+                pk1 = "N/A"
+            if pk2 == 0:
+                pk2 = "N/A"
+            if pk3 == 0:
+                pk3 = "N/A"
+            if pk4 == 0:
+                pk4 = "N/A"
+            if pk5 == 0:
+                pk5 = "N/A"
+            if pk6 == 0:
+                pk6 = "N/A"
+            party = (f"Your party consists of: \n- {pk1}\n- {pk2}\n- {pk3}\n- {pk4}\n- {pk5}\n- {pk6}")
+            party_label = Label(
+                view_party_frame,
+                text=party,
+                font=('Roboto', 12),
+                bg="cyan3",
+                fg="white"
+            )
+            party_label.pack(side=TOP)
+
+            remove_party_button = customtkinter.CTkButton(
+                view_party_frame,
+                text="Remove a Pokémon",
+                command=party_remove
+            )
+            remove_party_button.pack(pady=10, side=BOTTOM)
+        
+        hide_party_button = customtkinter.CTkButton(
+            view_party_frame,
+            text="Hide Party",
+            command=view_party_frame.destroy
+        )
+        hide_party_button.pack(pady=10, side=BOTTOM)
+
 
 
     def search():
@@ -634,7 +593,7 @@ def open_main_window(): # opens main window
 
         search_result_entry = search_entry.get()
 
-        url = f"https://pokeapi.co/api/v2/pokemon/{search_result_entry.lower()}"
+        url = f"https://pokeapi.co/api/v2/pokemon/{search_result_entry.lower()}" # pass user input into the API URL
         response = requests.get(url)
         pokemon_data = response.json()
 
@@ -656,7 +615,7 @@ def open_main_window(): # opens main window
         pokemon_height = pokemon_info["height"]
         pokemon_weight = pokemon_info["weight"]
         pokemon_abilities = str(pokemon_info["abilities"]).replace("[","")
-        pokemon_abilities = pokemon_abilities.replace("]","") # removes the []' characters
+        pokemon_abilities = pokemon_abilities.replace("]","") # removes extra/redundant characters
         pokemon_abilities = pokemon_abilities.replace("'","")
         pokemon_types = str(pokemon_info["types"]).replace("[","")
         pokemon_types = pokemon_types.replace("]","")
@@ -732,6 +691,225 @@ def open_main_window(): # opens main window
         search_result_window.mainloop()
 
 
+    def open_settings(): #subroutine for user to access and change account settings
+        def confirm(entry, choice, frame): # confirm changed username/password/display name
+            """
+            ...Used to confirm username/password change.
+
+            Args:
+                :param entry (var): The name of the tkinter entry to get the input from.
+                :param choice (str): The name of the column to edit.
+                :param frame (var): The name of the tkinter frame to be destroyed.
+            """
+
+            error_label = Label(
+                settings_window,
+                text="",
+                bg="thistle3",
+                fg="red"
+            )
+            error_label.place(x=250, y=430, anchor=CENTER)
+
+            x = entry.get()
+
+            if choice == "Username":
+                user_list= user_data_df.Username.to_list()
+                if x == "":
+                    error_label.config(
+                        text="Username cannot be blank",
+                        bg="white"
+                    )
+                elif x in user_list:
+                    error_label.config(
+                        text=f"An account with the username '{x}' already exists",
+                        bg="white"
+                        )
+                else:
+                    user_data_df.loc[i, choice] = x
+                    user_data_df.to_csv('UserData.csv', index=False)
+                    frame.destroy()
+                    error_label.destroy()
+            elif choice == "DisplayName":
+                    if x == "":
+                        user_data_df.loc[i, choice] = username
+                        user_data_df.to_csv('UserData.csv', index=False)
+                        frame.destroy()
+                        error_label.destroy()
+                    else:
+                        user_data_df.loc[i, choice] = x
+                        user_data_df.to_csv('UserData.csv', index=False)
+                        frame.destroy()
+                        error_label.destroy()
+            elif choice == "Password":
+                if len(x) < 8:
+                    error_label.config(
+                        text="Password must be longer than 8 characters",
+                        bg="white"
+                    )
+                else:
+                    enc_pw, key = encrypt(x, None)
+                    user_data_df.loc[i, choice] = enc_pw
+                    user_data_df.loc[i, "key"] = key
+                    user_data_df.to_csv('UserData.csv', index=False)
+                    frame.destroy()
+                    error_label.destroy()
+
+
+        def change_username(): # subroutine to change username
+            new_username_frame = Frame(
+                settings_window,
+                bg="thistle3"
+                )
+            new_username_frame.place(x=250, y=180, anchor=CENTER)
+            new_username_label = Label(
+                new_username_frame,
+                text="Enter new username:",
+                font=('Roboto', 12),
+                bg="thistle3"
+            )
+            new_username_label.pack(side=LEFT)
+            new_username_entry = Entry(
+                new_username_frame,
+                font=('Roboto', 12),
+                bg="white"
+            )
+            new_username_entry.pack(side=LEFT)
+            new_username_button = customtkinter.CTkButton(
+                new_username_frame,
+                text="Confirm",
+                command=lambda: confirm(new_username_entry, "Username", new_username_frame)
+            )
+            new_username_button.pack(side=RIGHT)
+
+
+        def change_display_name():
+            new_display_name_frame = Frame(
+                settings_window,
+                bg="thistle3"
+                )
+            new_display_name_frame.place(x=250, y=250, anchor=CENTER)
+            new_display_name_label = Label(
+                new_display_name_frame,
+                text="Enter new display name:",
+                font=('Roboto', 12),
+                bg="thistle3"
+            )
+            new_display_name_label.pack(side=LEFT)
+            new_display_name_entry = Entry(
+                new_display_name_frame,
+                font=('Roboto', 12),
+                bg="white"
+            )
+            new_display_name_entry.pack(side=LEFT)
+            new_display_name_button = customtkinter.CTkButton(
+                new_display_name_frame,
+                text="Confirm",
+                command=lambda: confirm(new_display_name_entry, "DisplayName", new_display_name_frame)
+            )
+            new_display_name_button.pack(side=RIGHT)
+
+
+        def change_password(): # subroutine to change password
+            new_password_frame = Frame(
+                settings_window,
+                bg="thistle3"
+                )
+            new_password_frame.place(x=250, y=320, anchor=CENTER)
+            new_password_label = Label(
+                new_password_frame,
+                text="Enter new password:",
+                font=('Roboto', 12),
+                bg="thistle3"
+            )
+            new_password_label.pack(side=LEFT)
+            new_password_entry = Entry(
+                new_password_frame,
+                font=('Roboto', 12),
+                bg="white"
+            )
+            new_password_entry.pack(side=LEFT)
+            new_password_button = customtkinter.CTkButton(
+                new_password_frame,
+                text="Confirm",
+                command=lambda: confirm(new_password_entry, "Password", new_password_frame)
+            )
+            new_password_button.pack(side=RIGHT)
+
+
+        def view_id():
+            Id = user_data_df.loc[i, ["userID"]].to_string().replace("userID", "").strip()
+            id_frame = Frame(
+                settings_window,
+                bg="thistle3"
+            )
+            id_frame.place(x=250, y=390, anchor=CENTER)
+            id_label = Label(
+                id_frame,
+                text=f"Your account ID is {Id}",
+                font=('Roboto', 11),
+                bg="thistle3"
+            )
+            id_label.pack(side=LEFT)
+            hide_id_button = customtkinter.CTkButton(
+                id_frame,
+                text="Hide ID",
+                command=id_frame.destroy
+            )
+            hide_id_button.pack(side=RIGHT)
+
+
+
+        settings_window = Tk()
+        settings_window.geometry("500x500")
+        settings_window["bg"] = "thistle3"
+
+        back_button = customtkinter.CTkButton(
+            settings_window,
+            text="Close",
+            command=lambda: close_window(settings_window)
+        )
+        back_button.place(x=30, y=30, anchor=W)
+
+        settings_label = Label(
+            settings_window,
+            text="Settings",
+            font=('Roboto', 20),
+            bg="thistle3"
+        )
+        settings_label.place(x=250, y=50, anchor=CENTER)
+
+        change_username_button = customtkinter.CTkButton(
+            settings_window,
+            text="Change Username",
+            command=change_username
+        )
+        change_username_button.place(x=250, y=150, anchor=CENTER)
+
+        change_display_name_button = customtkinter.CTkButton(
+            settings_window,
+            text="Change Display Name",
+            command=change_display_name
+        )
+        change_display_name_button.place(x=250, y=220, anchor=CENTER)
+
+        change_password_button = customtkinter.CTkButton(
+            settings_window,
+            text="Change Password",
+            command=change_password
+        )
+        change_password_button.place(x=250, y=290, anchor=CENTER)
+
+        view_id_button = customtkinter.CTkButton(
+            settings_window,
+            text="View Account ID",
+            command=view_id
+        )
+        view_id_button.place(x=250, y=360, anchor=CENTER)
+
+
+        settings_window.mainloop()
+
+
     main_window = Tk()
     width = main_window.winfo_screenwidth()
     height = main_window.winfo_screenwidth()
@@ -743,12 +921,21 @@ def open_main_window(): # opens main window
         text="Back to menu",
         command=lambda: to_prev_window(main_window, intial_window)
     )
-    back_to_menu.place(x=30,y=30)
+    back_to_menu.place(x=30,y=30, anchor=W)
+
+    settings_button = customtkinter.CTkButton(
+        main_window,
+        text="Settings",
+        command=open_settings
+    )
+    settings_button.place(x=(width-30) ,y=30, anchor=E)
 
     search_label = Label(
         main_window,
-        text="Search Pokemon by Name or ID",
-        font=('Roboto', 20)
+        text="Search Pokémon by Name or ID",
+        font=('Roboto', 25),
+        bg="red",
+        fg="white"
     )
     search_label.place(x=(width/2), y=300, anchor=CENTER)
 
@@ -771,45 +958,15 @@ def open_main_window(): # opens main window
     )
     search_button.pack(side=RIGHT)
 
+    view_party_button = customtkinter.CTkButton(
+        main_window,
+        text="View party",
+        command=view_party
+    )
+    view_party_button.place(x=(width/2), y=400, anchor=CENTER)
+
 
     main_window.mainloop()
 
 # MAIN LOOP
 intial_window()
-open_main_window()
-
-
-#PANDAS UTILITIES
-
-# print(party_df["Username"]) #returns usernames
-# print(party_df[["Username", "Pokemon1"]]) #returns usernames and items in Pokemon1
-# print(party_df[party_df.index==1]) #returns items on index/row 1
-# print(party_df[party_df.index.isin(range(1,4))]) #returns items on the indexes between 0 and 4
-# print(party_df.loc[1]) #returns a pandas Series of items at the index labelled 1, not set in this csv so it returns items at location 1 by default
-# print(party_df.iloc[1]) #returns a pandas Series of items at index location 1
-# print(party_df.loc[2:5]) #returns rows between 1 and 5
-# print(party_df.loc[[1,2,4]]) #returns items at indexes labelled 1, 2, & 4
-# print(party_df.iloc[[1,2,4]]) #returns items at index locations 1, 2, & 4
-# print(party_df.loc[2:5, ["Username", "Pokemon2", "Pokemon5"]]) #returns items at indexes between 1 & 5 in the columns passed as args
-# print(party_df.iloc[2:5, :2]) #returns items at indexes between 1 and 5 in the first 2 columns
-# print(party_df.loc[2:, ["userID", "Pokemon4"]]) #returns items after the first 2 indexes and in the passed columns
-# print(party_df.iloc[2:,:3]) #returns items after the first 2 rows and in the first 3 columns
-# print(party_df[party_df.Username == "Dylan1"]) #returns items in the same row as the Username 'Dylan1'
-# print(party_df.loc[party_df["number"] > 20]) #returns all rows where the column 'number' is greater than 20
-# print(party_df.loc[party_df["number"] > 20, ["Username", "Pokemon3"]]) #returns items in the passed columns where the relational column 'number' is greater than 20
-# print(party_df.isnull().sum()) #returns sum of null values in each column
-# party_df.dropna() #removes all rows with Null values
-
-# party_df2 = pd.concat([party_df,party_df]) #returns a df with duplicates of all rows
-# print(party_df2)
-# party_df2 = party_df2.drop_duplicates() #removes all duplicates
-# print(party_df2)
-
-# party_df2.rename(columns = {"userID":"ID"}, inplace = True) #renames the column from args1 to args2
-# print(party_df2) #inplace = True commits the changes to the df
-# party_df2.columns = ["col0", "col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"] #assigns column names
-# print(party_df2)
-# print(party_df["number"].mean()) #returns the mean of the 'number' column
-# #there is also mode and median
-
-# print("end")
