@@ -285,20 +285,27 @@ def open_login_window(): #subroutine for logging into pokedex account
         user_list = df["Username"].to_list()
 
         count = 0
-        for i in user_list:
-            count += 1
-            if count > len(user_list)-1: # -1 to account for list indexing starting at 0
-                error_label.config(
-                    text=f"An account with the username '{username}' does not exist",
-                    bg ="white",
-                    fg="red"
-                )
+        if len(user_list) < 1:
+            error_label.config(
+                text=f"An account with the username '{username}' does not exist",
+                bg ="white",
+                fg="red"
+            )
+        else:
+            for i in user_list:
+                count += 1
+                if count > len(user_list)-1: # -1 to account for list indexing starting at 0
+                    error_label.config(
+                        text=f"An account with the username '{username}' does not exist",
+                        bg ="white",
+                        fg="red"
+                    )
 
-            if username == i:
-                error_label.config(
-                    text="",
-                    bg="red"
-                )
+                if username == i:
+                    error_label.config(
+                        text="",
+                        bg="red"
+                  )
 
                 pasw = df.loc[df["Username"] == username]["Password"].item()
                 key = df.loc[df["Username"] == username]["key"].item()
@@ -385,12 +392,13 @@ def open_main_window(): # opens main window
     i = i[0] # list to string
 
         # ADD TO PARTY
-    def party_add(pokemon_name): #subroutine to add pokemon to user's party
+    def party_add(pokemon_name, window): #subroutine to add pokemon to user's party
         """
         ...Adds a chosen pokemon to the user's party.
 
         Args:
-            :param pokemon_name(str): The Pokemon to be added to the user's party
+            :param pokemon_name (str): The Pokemon to be added to the user's party.
+            :param window (var): The tkinter window in use.
         """        
 
         pk1 = user_data_df.loc[i, ["Pokemon1"]].to_string().replace("Pokemon1", "").strip() # convert value in df to a string without the column name
@@ -400,43 +408,95 @@ def open_main_window(): # opens main window
         pk5 = user_data_df.loc[i, ["Pokemon5"]].to_string().replace("Pokemon5", "").strip()
         pk6 = user_data_df.loc[i, ["Pokemon6"]].to_string().replace("Pokemon6", "").strip()
 
+        error_label = Label(
+            window,
+            text="",
+            font=('Roboto', 12),
+            bg="white",
+            fg="white",
+        )
+        error_label.place(x=250, y=400, anchor=CENTER)
+        error_label.destroy()
+
         if pk1 == pokemon_name: # if any of these are '0', it's because that pokemon cell is empty and can be added to
-            print(f"You already have {pokemon_name} on your team!") # if it's NOT '0', it's because there is a pokemon currently in that cell
+            error_label = Label( # if it's NOT '0', it's because there is a pokemon currently in that cell
+                window,
+                text=f"You already have {pokemon_name} on your team!",
+                bg="white",
+                fg="red"
+            )
+            error_label.place(x=250, y=400, anchor=CENTER)
         elif pk1 == "0":
             user_data_df.loc[i, "Pokemon1"] = pokemon_name
             user_data_df.to_csv('UserData.csv', index=False)
         else:
             if pk2 == pokemon_name:
-                print(f"You already have {pokemon_name} on your team!")                    
+                error_label = Label(
+                    window,
+                    text=f"You already have {pokemon_name} on your team!",
+                    bg="white",
+                    fg="red"
+                )
+                error_label.place(x=250, y=400, anchor=CENTER)            
             elif pk2 == "0":
                 user_data_df.loc[i, "Pokemon2"] = pokemon_name
                 user_data_df.to_csv('UserData.csv', index=False)
             else:
                 if pk3 == pokemon_name:
-                    print(f"You already have {pokemon_name} on your team!")
+                    error_label = Label(
+                        window,
+                        text=f"You already have {pokemon_name} on your team!",
+                        bg="white",
+                        fg="red"
+                    )
+                    error_label.place(x=250, y=400, anchor=CENTER)
                 elif pk3 == "0":
                     user_data_df.loc[i, "Pokemon3"] = pokemon_name
                     user_data_df.to_csv('UserData.csv', index=False)
                 else:
                     if pk4 == pokemon_name:
-                        print(f"You already have {pokemon_name} on your team!")
+                        error_label = Label(
+                            window,
+                            text=f"You already have {pokemon_name} on your team!",
+                            bg="white",
+                            fg="red"
+                        )
+                        error_label.place(x=250, y=400, anchor=CENTER)
                     elif pk4 == "0":
                         user_data_df.loc[i, "Pokemon4"] = pokemon_name
                         user_data_df.to_csv('UserData.csv', index=False)
                     else:
                         if pk5 == pokemon_name:
-                            print(f"You already have {pokemon_name} on your team!")
+                            error_label = Label(
+                                window,
+                                text=f"You already have {pokemon_name} on your team!",
+                                bg="white",
+                                fg="red"
+                            )
+                            error_label.place(x=250, y=400, anchor=CENTER)
                         elif pk5 == "0":
                             user_data_df[i, "Pokemon5"] = pokemon_name
                             user_data_df.to_csv('UserData.csv', index=False)
                         else:
                             if pk6 == pokemon_name:
-                                print("You already have 6 Pokemon on your team!")
+                                error_label = Label(
+                                    window,
+                                    text=f"You already have {pokemon_name} on your team!",
+                                    bg="white",
+                                    fg="red"
+                                )
+                                error_label.place(x=250, y=400, anchor=CENTER)
                             elif pokemon_name == "0":
                                 user_data_df[i, "Pokemon6"] = pokemon_name
                                 user_data_df.to_csv('UserData.csv', index=False)
                             else:
-                                print("You already have 6 Pokemon on your team!")
+                                error_label = Label(
+                                    window,
+                                    text=f"You already have 6 Pokémon on your team!",
+                                    bg="white",
+                                    fg="red"
+                                )
+                                error_label.place(x=250, y=400, anchor=CENTER)
 
 
     def party_replace(): # subroutine to replace a pokemon from user's party
@@ -463,6 +523,7 @@ def open_main_window(): # opens main window
                     bg="red"
                 )
                 error_label.place(x=(width/2), y=700, anchor=CENTER)
+                error_label.destroy()
 
                 pokemon_name = pokemon.get()
                 pokemon_name = pokemon_name.capitalize() # capitalize makes sure that first char is upper and the rest are lower to prevent errors caused by inputs such as 'piKAcHu'
@@ -479,11 +540,12 @@ def open_main_window(): # opens main window
                         party_remove_frame.destroy()
                         view_party_frame.destroy()
                     elif count == 6 and x != pokemon_name: # display error message once compared with all 6 and no matches
-                        error_label.config(
+                        error_label = Label(
                             text=f"{pokemon_name} is not in your party",
                             bg="white",
                             fg="red"
                         )
+                        error_label.place(x=(width/2), y=700, anchor=CENTER)
 
 
             party_remove_frame = Frame(
@@ -526,12 +588,13 @@ def open_main_window(): # opens main window
             )
             error_label.pack()
         else:
+            error_label.destroy()
             if pk1 == 0:
                 pk1 = "N/A"
             if pk2 == 0:
                 pk2 = "N/A"
             if pk3 == 0:
-                pk3 = "N/A"
+                pk3 = "N/A"+
             if pk4 == 0:
                 pk4 = "N/A"
             if pk5 == 0:
@@ -558,10 +621,9 @@ def open_main_window(): # opens main window
         hide_party_button = customtkinter.CTkButton(
             view_party_frame,
             text="Hide Party",
-            command=view_party_frame.destroy
+            command=lambda: view_party_frame.destroy()#, error_label.destroy() 
         )
         hide_party_button.pack(pady=10, side=BOTTOM)
-
 
 
     def search():
@@ -667,18 +729,9 @@ def open_main_window(): # opens main window
         add_to_party = customtkinter.CTkButton(
             search_result_frame,
             text="Add to my party",
-            command=lambda: party_add(pokemon_name)
+            command=lambda: party_add(pokemon_name, search_result_window)
         )
         add_to_party.pack(side=TOP)
-
-        error_label = Label(
-            search_result_frame,
-            text="",
-            font=('Roboto', 12),
-            bg="red",
-            fg="red"
-        )
-        error_label.pack(side=TOP)
 
         close_window_button = customtkinter.CTkButton(
             search_result_window,
@@ -689,6 +742,10 @@ def open_main_window(): # opens main window
 
 
         search_result_window.mainloop()
+
+
+    def search_by_type():
+        pass
 
 
     def open_settings(): #subroutine for user to access and change account settings
